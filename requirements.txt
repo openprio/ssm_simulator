@@ -1,4 +1,4 @@
 paho-mqtt==1.5.0
-certifi==2019.9.11
+certifi==2022.12.7
 inquirer==2.6.3
 protobuf==3.10.0

@@ -1,5 +1,5 @@
 # This file helps to send simulated SSM messages.
-import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 from datetime import datetime
 import os
 import logging
@@ -16,6 +16,21 @@ password = os.getenv("MQTT_PASSWORD")
 
 logger = logging.getLogger(__name__)
 
+missing_vars = [name for name, value in [
+    ("MQTT_HOST", host),
+    ("MQTT_DEVICE_ID", device_id),
+    ("MQTT_PASSWORD", password),
+] if not value]
+
+if missing_vars:
+    logger.error(
+        "Missing required MQTT environment variables: %s. "
+        "Please set them before running, e.g.:\n%s",
+        ", ".join(missing_vars),
+        "\n".join("  export %s=<value>" % var for var in missing_vars),
+    )
+    exit(1)
+
 questions = [
   inquirer.Text('data_owner_code', message="Dataownercode"),
   inquirer.Text('vehicle_number', message="Dataownercode of bus"),
@@ -27,6 +42,13 @@ answers = inquirer.prompt(questions)
 data_owner_code = answers["data_owner_code"]
 vehicle_number = answers["vehicle_number"]
 topic = "/%s/pt/ssm/%s/vehicle_number/%s" % (answers["environment"], data_owner_code, vehicle_number)
+
+client = mqtt.Client(client_id=device_id)
+client.username_pw_set(device_id, password)
+client.tls_set(ca_certs=certifi.where())
+client.reconnect_delay_set(min_delay=1, max_delay=30)
+client.connect(host, port=8883, keepalive=60)
+client.loop_start()
 
 def generate_ssm(priorization_response_status):
     msg = ssm.ExtendedSSM()
@@ -49,8 +71,8 @@ def send_ssm_message(type_msg):
     result.ParseFromString(data)
     print(result.ssm.status[0].sigStatus[0])
     print(result)
-    publish.single(topic, payload=data, tls={"ca_certs":certifi.where(), "insecure": True}, 
-        hostname=host, port=8883, client_id=device_id, auth={"username": device_id, "password": password})
+    info = client.publish(topic, payload=data, qos=1)
+    info.wait_for_publish()
 
 
 

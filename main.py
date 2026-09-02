@@ -18,13 +18,15 @@ logger = logging.getLogger(__name__)
 
 questions = [
   inquirer.Text('data_owner_code', message="Dataownercode"),
-  inquirer.Text('vehicle_number', message="Dataownercode of bus")
+  inquirer.Text('vehicle_number', message="Dataownercode of bus"),
+  inquirer.List('environment', message="Environment",
+      choices=['test', 'prod'], default='test'),
 ]
 answers = inquirer.prompt(questions)
 
 data_owner_code = answers["data_owner_code"]
 vehicle_number = answers["vehicle_number"]
-topic = "/prod/pt/ssm/%s/vehicle_number/%s" % (data_owner_code, vehicle_number)
+topic = "/%s/pt/ssm/%s/vehicle_number/%s" % (answers["environment"], data_owner_code, vehicle_number)
 
 def generate_ssm(priorization_response_status):
     msg = ssm.ExtendedSSM()

@@ -33,7 +33,7 @@ if missing_vars:
 
 questions = [
   inquirer.Text('data_owner_code', message="Dataownercode"),
-  inquirer.Text('vehicle_number', message="Dataownercode of bus"),
+  inquirer.Text('vehicle_number', message="Vehicle number of bus"),
   inquirer.List('environment', message="Environment",
       choices=['test', 'prod'], default='test'),
 ]
